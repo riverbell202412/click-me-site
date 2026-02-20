@@ -3,49 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>クリックミー</title>
+    <title>ストップウォッチ</title>
     <style>
         body {
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
             background-color: #f0f0f0;
             font-family: sans-serif;
-            flex-direction: column;
         }
-        button {
-            padding: 20px 40px;
-            font-size: 24px;
+        #timeDisplay {
+            font-size: 48px;
+            font-weight: bold;
+            font-family: monospace;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        button, .share-btn {
+            padding: 15px 30px;
+            font-size: 20px;
             cursor: pointer;
             border: none;
             border-radius: 8px;
-            background-color: #007BFF;
             color: white;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             transition: background-color 0.3s;
+            text-decoration: none;
+            margin: 10px;
+            text-align: center;
+            width: 250px;
+            box-sizing: border-box;
         }
-        button:hover {
-            background-color: #0056b3;
+        #mainBtn {
+            background-color: #007BFF; /* 青色（スタート時） */
         }
-        #message {
-            margin-top: 20px;
-            font-size: 20px;
-            font-weight: bold;
-            color: #333;
-            height: 24px; /* テキストがない時も高さを確保 */
+        #mainBtn.stop {
+            background-color: #dc3545; /* 赤色（ストップ時） */
+        }
+        .share-btn {
+            background-color: #000000; /* Xの黒色 */
+            display: none; /* 初期状態は非表示 */
+        }
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
     </style>
 </head>
 <body>
 
-    <button id="clickBtn">クリック</button>
-    <div id="message"></div>
+    <div id="timeDisplay">00:00.000</div>
+    <div class="button-container">
+        <button id="mainBtn">スタート</button>
+        <a id="shareBtn" class="share-btn" target="_blank" rel="noopener noreferrer">𝕏で結果をシェア</a>
+    </div>
 
     <script>
-        document.getElementById('clickBtn').addEventListener('click', function() {
-            document.getElementById('message').textContent = 'サンキュー！';
+        let startTime;
+        let timerInterval;
+        let isRunning = false;
+
+        const display = document.getElementById('timeDisplay');
+        const mainBtn = document.getElementById('mainBtn');
+        const shareBtn = document.getElementById('shareBtn');
+
+        // 時間を見やすくフォーマットする関数
+        function formatTime(ms) {
+            const minutes = Math.floor(ms / 60000);
+            const seconds = Math.floor((ms % 60000) / 1000);
+            const milliseconds = ms % 1000;
+            return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(3, '0')}`;
+        }
+
+        mainBtn.addEventListener('click', function() {
+            if (!isRunning) {
+                // 【スタートを押したときの処理】
+                startTime = Date.now();
+                isRunning = true;
+                mainBtn.textContent = 'ストップ';
+                mainBtn.classList.add('stop'); // ボタンを赤くする
+                shareBtn.style.display = 'none'; // シェアボタンを隠す
+
+                // 10ミリ秒ごとに画面の数字を更新
+                timerInterval = setInterval(() => {
+                    const elapsedTime = Date.now() - startTime;
+                    display.textContent = formatTime(elapsedTime);
+                }, 10);
+            } else {
+                // 【ストップを押したときの処理】
+                clearInterval(timerInterval); // 時間の更新を止める
+                isRunning = false;
+                mainBtn.textContent = 'もう一度（リセット）';
+                mainBtn.classList.remove('stop'); // ボタンを青に戻す
+                
+                // 結果の取得とシェアリンクの生成
+                const finalTime = display.textContent;
+                const siteUrl = "https://click-me-site.vercel.app/"; // ご自身のVercelのURL
+                
+                // 𝕏に渡す文章を作る
+                const tweetText = encodeURIComponent(`私の記録は ${finalTime} でした！⏱️\nみんなも挑戦してみて！\n`);
+                shareBtn.href = `https://twitter.com/intent/tweet?text=${tweetText}&url=${encodeURIComponent(siteUrl)}`;
+                
+                shareBtn.style.display = 'block'; // シェアボタンを表示する
+            }
         });
     </script>
 
