@@ -52,26 +52,65 @@
             flex-direction: column;
             align-items: center;
         }
+        #stopwatchBox {
+            border: 3px solid #333;
+            border-radius: 20px;
+            padding: 40px 30px;
+            background-color: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        #historyContainer {
+            margin-top: 40px;
+            text-align: center;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        #historyContainer h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .history-item {
+            background-color: white;
+            padding: 10px 20px;
+            margin: 5px 0;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-size: 18px;
+            font-family: monospace;
+            color: #333;
+        }
     </style>
 </head>
 <body>
 <div style="position: absolute; top: 20px; left: 20px;">
         <a href="01.html" style="font-size: 20px; text-decoration: none; color: #007BFF; font-weight: bold;">01</a>
     </div>
-    <div id="timeDisplay">00:00.000</div>
-    <div class="button-container">
+    <h1 style="margin-top: 20px; margin-bottom: 40px; color: #333;">０２．履歴つきストップウォッチ</h1>
+    <div id="stopwatchBox">
+        <div id="timeDisplay">00:00.000</div>
+        <div class="button-container">
         <button id="mainBtn">スタート！！</button>
         <a id="shareBtn" class="share-btn" target="_blank" rel="noopener noreferrer">𝕏で結果をシェア</a>
+        </div>
+    </div>
+    <div id="historyContainer" style="display: none;">
+        <h3>履歴</h3>
+        <div id="historyList"></div>
     </div>
 
     <script>
         let startTime;
         let timerInterval;
         let isRunning = false;
+        let times = []; // 時間を保存する配列（オブジェクト形式）
+        let measureCount = 0; // 計測回数をカウント
 
         const display = document.getElementById('timeDisplay');
         const mainBtn = document.getElementById('mainBtn');
         const shareBtn = document.getElementById('shareBtn');
+        const historyContainer = document.getElementById('historyContainer');
+        const historyList = document.getElementById('historyList');
 
         // 時間を見やすくフォーマットする関数
         function formatTime(ms) {
@@ -79,6 +118,20 @@
             const seconds = Math.floor((ms % 60000) / 1000);
             const milliseconds = ms % 1000;
             return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(3, '0')}`;
+        }
+
+        // 履歴を画面に表示する関数
+        function updateHistory() {
+            historyList.innerHTML = '';
+            times.forEach((item) => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                historyItem.textContent = `#${item.number}: ${item.time}`;
+                historyList.appendChild(historyItem);
+            });
+            if (times.length > 0) {
+                historyContainer.style.display = 'block';
+            }
         }
 
         mainBtn.addEventListener('click', function() {
@@ -99,11 +152,15 @@
                 // 【ストップを押したときの処理】
                 clearInterval(timerInterval); // 時間の更新を止める
                 isRunning = false;
-                mainBtn.textContent = 'もう一度（リセット）';
+                mainBtn.textContent = 'スタート！！'; // ボタンを「スタート」に戻す
                 mainBtn.classList.remove('stop'); // ボタンを青に戻す
                 
                 // 結果の取得とシェアリンクの生成
                 const finalTime = display.textContent;
+                measureCount++; // カウントをインクリメント
+                times.unshift({ number: measureCount, time: finalTime }); // 最新を配列の先頭に追加
+                updateHistory(); // 履歴を更新
+                
                 const siteUrl = "https://click-me-site.vercel.app/"; // ご自身のVercelのURL
                 
                 // 𝕏に渡す文章を作る
