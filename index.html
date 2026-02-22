@@ -9,12 +9,24 @@
         body {
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            /* 変更：center を flex-start（上詰め）に変更 */
+            justify-content: flex-start; 
             align-items: center;
-            height: 100vh;
+            /* 変更：height を min-height に（履歴が増えても背景が切れないように） */
+            min-height: 100vh;
             margin: 0;
+            /* 追加：上から10vh（画面の高さの10%）の位置に固定 */
+            padding-top: 10vh; 
             background-color: #f0f0f0;
             font-family: sans-serif;
+            box-sizing: border-box;
+        }
+        .center-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* justify-content: center; は削除（親のbodyで位置固定するため） */
+            width: 100%;
         }
         #timeDisplay {
             font-size: 48px;
@@ -46,12 +58,15 @@
         }
         .share-btn {
             background-color: #000000; /* Xの黒色 */
-            display: none; /* 初期状態は非表示 */
+            visibility: hidden; /* 初期状態は不可視だがレイアウトは確保 */
+            display: block; /* 幅を適用するためにブロックにする */
         }
         .button-container {
             display: flex;
             flex-direction: column;
             align-items: center;
+            height: 120px; /* ボタン2つ分の高さを固定 */
+            justify-content: center;
         }
         #stopwatchBox {
             border: 3px solid #333;
@@ -65,7 +80,9 @@
             margin-top: 40px;
             text-align: center;
             max-height: 300px;
+            min-height: 120px; /* 高さを固定（必要に応じて調整） */
             overflow-y: auto;
+            transition: min-height 0.3s;
         }
         #historyContainer h3 {
             margin-top: 0;
@@ -85,21 +102,23 @@
 </head>
 <body>
 <div style="position: absolute; top: 20px; left: 20px;">
-        <a href="01.html" style="font-size: 20px; text-decoration: none; color: #007BFF; font-weight: bold;">01</a>
-    </div>
+    <a href="01.html" style="font-size: 20px; text-decoration: none; color: #007BFF; font-weight: bold;">01</a>
+</div>
+<div class="center-wrapper">
     <h1 style="margin-top: 20px; margin-bottom: 40px; color: #333;">０２．履歴つきストップウォッチ</h1>
     <div id="stopwatchBox">
         <div id="timeDisplay">00:00.000</div>
         <div class="button-container">
-        <button id="mainBtn">スタート！！</button>
-        <a id="shareBtn" class="share-btn" target="_blank" rel="noopener noreferrer">𝕏で結果をシェア</a>
+            <button id="mainBtn">スタート！！</button>
+            <a id="shareBtn" class="share-btn" target="_blank" rel="noopener noreferrer">𝕏で結果をシェア</a>
         </div>
     </div>
     <div id="historyContainer" style="display: none;">
         <h3>履歴</h3>
         <div id="historyList"></div>
     </div>
-
+</div>
+        
     <script>
         let startTime;
         let timerInterval;
@@ -142,7 +161,7 @@
                 isRunning = true;
                 mainBtn.textContent = 'ストップ';
                 mainBtn.classList.add('stop'); // ボタンを赤くする
-                shareBtn.style.display = 'none'; // シェアボタンを隠す
+                shareBtn.style.visibility = 'hidden'; // シェアボタンを不可視にする（レイアウトは維持）
 
                 // 10ミリ秒ごとに画面の数字を更新
                 timerInterval = setInterval(() => {
@@ -155,20 +174,20 @@
                 isRunning = false;
                 mainBtn.textContent = 'スタート！！'; // ボタンを「スタート」に戻す
                 mainBtn.classList.remove('stop'); // ボタンを青に戻す
-                
+        
                 // 結果の取得とシェアリンクの生成
                 const finalTime = display.textContent;
                 measureCount++; // カウントをインクリメント
                 times.unshift({ number: measureCount, time: finalTime }); // 最新を配列の先頭に追加
                 updateHistory(); // 履歴を更新
-                
+        
                 const siteUrl = "https://click-me-site.vercel.app/"; // ご自身のVercelのURL
-                
+        
                 // 𝕏に渡す文章を作る
                 const tweetText = encodeURIComponent(`私の記録は ${finalTime} でした！⏱️\nみんなも挑戦してみて！\n`);
                 shareBtn.href = `https://twitter.com/intent/tweet?text=${tweetText}&url=${encodeURIComponent(siteUrl)}`;
                 
-                shareBtn.style.display = 'block'; // シェアボタンを表示する
+                shareBtn.style.visibility = 'visible'; // シェアボタンを可視化する
             }
         });
     </script>
